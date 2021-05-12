@@ -25,7 +25,7 @@ spec:
             path: "nginx.default.conf"
       initContainers:
         - name: artisan
-          image: wlgns5376/lumen-user-api:0.1.0
+          image: wlgns5376/lumen-user-api:0.0.1
           command: ["/bin/bash", "-c", "php artisan migrate --force"]
           env:
             - name: DB_USERNAME
@@ -54,7 +54,7 @@ spec:
               mountPath: /var/www/html
 
         - name: app
-          image: wlgns5376/lumen-user-api:0.1.0
+          image: wlgns5376/lumen-user-api:0.0.1
           volumeMounts:
             - name: app
               mountPath: /app
