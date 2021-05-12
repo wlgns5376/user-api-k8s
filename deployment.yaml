@@ -54,7 +54,7 @@ spec:
               mountPath: /var/www/html
 
         - name: app
-          image: wlgns5376/lumen-user-api:0.1.1
+          image: wlgns5376/lumen-user-api:0.1.0
           volumeMounts:
             - name: app
               mountPath: /app
