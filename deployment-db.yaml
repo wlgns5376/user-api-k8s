@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: user-api-db-pv-volume
+  labels:
+    type: local
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: user-api-db-pv-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-api-db
+  labels:
+    app: user-api-db
+spec:
+  selector:
+    matchLabels:
+      app: user-api-db
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: user-api-db
+    spec:
+      containers:
+      - image: mariadb:10.6
+        name: mysql
+        env:
+          # Use secret in real usage
+        - name: MYSQL_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: user-api-app-config
+              key: DB_DATABASE
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: user-api-secret
+              key: DB_ROOT_PASSWORD
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: user-api-secret
+              key: DB_USERNAME
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: user-api-secret
+              key: DB_PASSWORD
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-persistent-storage
+        persistentVolumeClaim:
+          claimName: user-api-db-pv-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-api-db
+spec:
+  ports:
+  - port: 3306
+  selector:
+    app: user-api-db
+  clusterIP: None

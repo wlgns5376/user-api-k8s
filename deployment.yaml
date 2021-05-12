@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-api
+  labels:
+    app: user-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: user-api
+  template:
+    metadata:
+      labels:
+        app: user-api
+    spec:
+      volumes:
+      - name: app
+        emptyDir: {}
+      - name: nginx-vhost
+        configMap:
+          name: user-api-nginx-config
+          items:
+          - key: "nginx.default.conf"
+            path: "nginx.default.conf"
+      initContainers:
+        - name: artisan
+          image: wlgns5376/lumen-user-api:0.1.0
+          command: ["/bin/bash", "-c", "php artisan migrate --force"]
+          env:
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: user-api-secret
+                  key: DB_USERNAME
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: user-api-secret
+                  key: DB_PASSWORD
+          envFrom:
+            - configMapRef:
+                name: user-api-app-config
+      containers:
+        - name: nginx
+          image: nginx:1.19-alpine
+          ports:
+            - name: http
+              containerPort: 80
+          volumeMounts:
+            - name: nginx-vhost
+              mountPath: /etc/nginx/conf.d
+            - name: app
+              mountPath: /var/www/html
+
+        - name: app
+          image: wlgns5376/lumen-user-api:0.1.1
+          volumeMounts:
+            - name: app
+              mountPath: /app
+          env:
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: user-api-secret
+                  key: DB_USERNAME
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: user-api-secret
+                  key: DB_PASSWORD
+          envFrom:
+            - configMapRef:
+                name: user-api-app-config
+          ports:
+            - name: phpfpm
+              containerPort: 9000
+              protocol: TCP
+        

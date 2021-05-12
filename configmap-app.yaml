@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-api-app-config
+data:
+  APP_DEBUG: "false"
+  APP_ENV: production
+  APP_NAME: "User-Api"
+  DB_CONNECTION: mysql
+  DB_DATABASE: micro_user
+  DB_HOST: user-api-db
+  DB_PORT: "3306"
